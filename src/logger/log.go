@@ -27,18 +27,18 @@ type Info struct {
 	Type      int // WARN | INFO | ERROR | DEBUG
 	Package   string
 	Method    string
-	ErrorCode string
+	ErrorCode int
 	Message   string
 	Error     error
 }
 
 func (info *Info) String() string {
 	txt := ""
-	txt += info.LogTime.String() + "\t : "
+	txt += info.LogTime.Format("2006-01-02T15:04:05.000000-07:30") + " : "
 	txt += strconv.Itoa(info.Type) + " : "
 	txt += info.Package + "."
 	txt += info.Method + " # "
-	txt += info.ErrorCode + " : "
+	txt += strconv.Itoa(info.ErrorCode) + " : "
 	txt += info.Message
 	if info.Error != nil {
 		txt += " : " + info.Error.Error()
@@ -48,8 +48,19 @@ func (info *Info) String() string {
 }
 
 // Logger logs
-func Logger(filename string, infoCh <-chan Info, shutdownCh <-chan bool, wg *sync.WaitGroup) {
-	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+func Logger(filepath, filename string, infoCh <-chan Info, shutdownCh <-chan bool, wg *sync.WaitGroup) {
+	// create dir
+	_, err := os.Stat(filepath)
+
+	if os.IsNotExist(err) {
+		errDir := os.MkdirAll(filepath, 0755)
+		if errDir != nil {
+			log.Fatal(err)
+		}
+
+	}
+	fileFullName := filepath + "/" + filename + time.Now().Format("-2006-01-02-15-04") + ".log"
+	file, err := os.OpenFile(fileFullName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatalf("failed opening file: %s", err)
 	}
