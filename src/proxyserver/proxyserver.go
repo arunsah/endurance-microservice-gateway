@@ -12,6 +12,7 @@ import (
 	"time"
 
 	Logger "../logger"
+	Registrar "../registrar"
 )
 
 // ProxyServer holds information related to the proxy server
@@ -20,6 +21,7 @@ type ProxyServer struct {
 	Port          string
 	Version       string
 	Message       string
+	Registrar     Registrar.Registrar
 	Logpath       string
 	Logfile       string
 	LogInfoCh     chan Logger.Info
@@ -76,6 +78,8 @@ func staticFileHandler(w http.ResponseWriter, r *http.Request) {
 // ServeHTTP server the web request
 func (proxyServer *ProxyServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
+	//fmt.Println("@", req.req.URL.Scheme, req.URL.User, req.URL.User.Username(), req.URL.Host, req.URL.Path, req.URL.Fragment, req.URL.RawPath, req.URL.RawQuery)
+
 	jsonQueryString := string(proxyServer.queryToJSON(req.URL.Query()))
 
 	proxyServer.LogInfoCh <- Logger.Info{LogTime: time.Now(), Type: Logger.INFO | Logger.STDOUT, Package: "proxyserver",
@@ -91,28 +95,31 @@ func (proxyServer *ProxyServer) ServeHTTP(res http.ResponseWriter, req *http.Req
 		return
 	}
 
-	port, service, version, msg := proxyServer.parseURL(req.URL.Query())
-	txt := ""
-	txt = txt + "port: " + port + "\n"
-	txt = txt + "service: " + service + "\n"
-	txt = txt + "version: " + version + "\n"
-	txt = txt + "msg: " + msg + "\n"
-	txt = txt + "Path: " + req.URL.Path + "\n"
+	//port, service, version, _ := proxyServer.parseURL(req.URL.Query())
+	// txt := ""
+	// txt = txt + "port: " + port + "\n"
+	// txt = txt + "service: " + service + "\n"
+	// txt = txt + "version: " + version + "\n"
+	// txt = txt + "msg: " + msg + "\n"
+	// txt = txt + "Path: " + req.URL.Path + "\n"
 
-	fmt.Fprintf(res, "%s\n", txt)
+	// fmt.Fprintf(res, "%s\n", txt)
 
-	result, err := dialServer("localhost", port, service, version)
-	if err != nil {
-		log.Fatalln("ServeHTTP:ERROR1: ", err)
-		//log.Fatalln("Retruing :")
-		//result, err = dialServer("localhost", ":9001", service, version)
-	}
-	fmt.Fprintf(res, "%s\n", result)
+	// webResult, err := proxyServer.TalkTo("localhost", port, service, version)
+	// if err != nil {
+	// 	proxyServer.LogInfoCh <- Logger.Info{LogTime: time.Now(), Type: Logger.FATAL | Logger.STDOUT, Package: "proxyserver",
+	// 		Method: "ServeHTTP()", ErrorCode: -1, Message: "Error with TalkTo", Error: err}
+	// }
+	// fmt.Fprintf(res, "%s\n", webResult)
 
-	log.Println("Request served :", req.RemoteAddr)
+	fmt.Fprintf(res, "Hello\n")
+	proxyServer.LogInfoCh <- Logger.Info{LogTime: time.Now(), Type: Logger.INFO | Logger.STDOUT, Package: "proxyserver",
+		Method: "ServeHTTP()", ErrorCode: -1, Message: "Request served to " + req.RemoteAddr, Error: nil}
+
 }
 
-func dialServer(host, port, service, version string) (string, error) {
+// TalkTo connects to the web servers and return results
+func (proxyServer *ProxyServer) TalkTo(host, port, service, version string) (string, error) {
 
 	addr := "http://" + host + port + "/" + service
 	var netTransport = &http.Transport{

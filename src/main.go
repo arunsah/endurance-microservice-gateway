@@ -6,6 +6,7 @@ import (
 
 	Logger "./logger"
 	ProxyServer "./proxyserver"
+	Registrar "./registrar"
 )
 
 var infoCh chan Logger.Info
@@ -33,12 +34,15 @@ func main() {
 	// init logger
 	initLogger(logpath, logfile)
 
+	registrar := Registrar.Registrar{Registry: make(map[string]map[uint]Registrar.AppInfo), Logpath: logpath, Logfile: logfile, LogInfoCh: infoCh, LogShutdownCh: shutdownCh}
+	registrar.HelloRegistrar()
+
 	// start server in terminals
 	// TODO: later start the server in service/deamon mode
-	proxyServerInfo := ProxyServer.ProxyServer{Host: host, Port: port, Version: version, Message: message,
+	proxyServerInfo := ProxyServer.ProxyServer{Host: host, Port: port, Version: version, Message: message, Registrar: registrar,
 		Logpath: logpath, Logfile: logfile, LogInfoCh: infoCh, LogShutdownCh: shutdownCh}
-	proxyServerInfo.RunServer()
-
+	//proxyServerInfo.RunServer()
+	_ = proxyServerInfo
 }
 
 // parse command line args
