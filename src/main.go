@@ -2,18 +2,17 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"sync"
-	"time"
 
 	Logger "./logger"
+	ProxyServer "./proxyserver"
 )
 
 var infoCh chan Logger.Info
 var shutdownCh chan bool
 var wg sync.WaitGroup
 
-func initLoggerChannels(logpath, logfile string) {
+func initLogger(logpath, logfile string) {
 	if infoCh == nil {
 		infoCh = make(chan Logger.Info, 1000)
 	}
@@ -23,37 +22,22 @@ func initLoggerChannels(logpath, logfile string) {
 
 	wg.Add(1)
 	go Logger.Logger(logpath, logfile, infoCh, shutdownCh, &wg)
-	//infoCh <- *ll
-	// reader := bufio.NewReader(os.Stdin)
-	// for {
-	// 	txt, _ := reader.ReadString('\n')
-	// 	txt = strings.TrimSpace(txt)
-	// 	if strings.ToLower(txt) == "shutdown" {
-	// 		shutdownCh <- true
-	// 		break
-	// 	}
-	// 	infoCh <- Logger.Info{LogTime: time.Now(), Type: Logger.INFO,
-	// 		Package: "main", Method: "main()", ErrorCode: "0", Message: txt, Error: nil}
-	// 	//fmt.Println(txt)
-	// }
+
 }
 
 func main() {
 	// parse command line args
 	// TODO: later these flags should be read from environment variables
 	host, port, version, message, logpath, logfile := parseFlags()
-	fmt.Println(host, port, version, message, logpath, logfile)
 
 	// init logger
-	initLoggerChannels(logpath, logfile)
+	initLogger(logpath, logfile)
 
 	// start server in terminals
 	// TODO: later start the server in service/deamon mode
-	startServer(host, port, version, message, logpath, logfile)
-
-	// ll := &Logger.Info{Type: Logger.WARN, Message: "Error ocurred"}
-	// fmt.Println(ll)
-	// fmt.Println(time.Now())
+	proxyServerInfo := ProxyServer.ProxyServer{Host: host, Port: port, Version: version, Message: message,
+		Logpath: logpath, Logfile: logfile, LogInfoCh: infoCh, LogShutdownCh: shutdownCh}
+	proxyServerInfo.RunServer()
 
 }
 
@@ -74,10 +58,4 @@ func parseFlags() (host, port, version, message, logpath, logfile string) {
 	logpath = *Logpath
 	logfile = *Logfile
 	return host, port, version, message, logpath, logfile
-}
-
-func startServer(host, port, version, message, logpath, logfile string) {
-	infoCh <- Logger.Info{LogTime: time.Now(), Type: Logger.INFO,
-		Package: "main", Method: "startServer()", ErrorCode: 0, Message: "Starting Proxy Server", Error: nil}
-	time.Sleep(5 * time.Second)
 }
