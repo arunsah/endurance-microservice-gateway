@@ -12,4 +12,3 @@ endurance-microservice is collection of repository whose objective is to create 
 - Will function as API gateway (throttling|limit).
 
 Later these functionality may be broken down in independent applications if the code base increases.
-
