@@ -61,6 +61,18 @@ func (proxyServer *ProxyServer) parseURL(query url.Values) (port, service, versi
 	return port, service, version, msg
 }
 
+// urlPathProcessing takes req.URL.Path and return slice of the path
+// "/" > ["/"], "/favicon.ico" > ["/favicon.ico"], "/inventory/list/all" > ["inventory", "list", "all"]
+func urlPathProcessing(path string) []string {
+	if path == "" {
+		return []string{}
+	}
+	if path == "/" {
+		return []string{"/"}
+	}
+	return strings.Split(path, "/")[1:]
+}
+
 func (proxyServer *ProxyServer) queryToJSON(urlValue url.Values) []byte {
 	json, err := json.Marshal(urlValue)
 	if err != nil {
