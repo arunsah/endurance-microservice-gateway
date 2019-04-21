@@ -133,7 +133,7 @@ func (registrar *Registrar) HelloRegistrar() {
 	// 	fmt.Println("\t", i, v)
 	// }
 
-	testPassword()
+	//testPassword()
 }
 
 func testPassword() {

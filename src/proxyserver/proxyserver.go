@@ -1,6 +1,7 @@
 package proxyserver
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -90,7 +91,25 @@ func staticFileHandler(w http.ResponseWriter, r *http.Request) {
 // ServeHTTP server the web request
 func (proxyServer *ProxyServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
-	//fmt.Println("@", req.req.URL.Scheme, req.URL.User, req.URL.User.Username(), req.URL.Host, req.URL.Path, req.URL.Fragment, req.URL.RawPath, req.URL.RawQuery)
+	bodyBytes, _ := ioutil.ReadAll(req.Body)
+	req.Body.Close() //  must close
+	req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	fmt.Println("req", req)
+	fmt.Println("req.Header", req.Header)
+	fmt.Println("req.Host", req.Host)
+	fmt.Println("req.Method", req.Method)
+	fmt.Println("req.URL.Path", req.URL.Path)
+	fmt.Println("req.Form", req.Form)
+	fmt.Println("string(bodyBytes)", string(bodyBytes))
+
+	values, err := url.ParseQuery(string(bodyBytes))
+	if err != nil {
+		//http.Error(w, err.Error(), http.StatusInternalServerError)
+		//return
+		fmt.Println("ERROR: ", err)
+	}
+	log.Println("indices from body", values)
 
 	jsonQueryString := string(proxyServer.queryToJSON(req.URL.Query()))
 
@@ -125,6 +144,7 @@ func (proxyServer *ProxyServer) ServeHTTP(res http.ResponseWriter, req *http.Req
 	// fmt.Fprintf(res, "%s\n", webResult)
 
 	fmt.Fprintf(res, "Hello\n")
+
 	proxyServer.LogInfoCh <- Logger.Info{LogTime: time.Now(), Type: Logger.INFO | Logger.STDOUT, Package: "proxyserver",
 		Method: "ServeHTTP()", ErrorCode: -1, Message: "Request served to " + req.RemoteAddr, Error: nil}
 

@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"sync"
 
+	Hash "./hash"
 	Logger "./logger"
 	ProxyServer "./proxyserver"
 	Registrar "./registrar"
@@ -34,6 +36,9 @@ func main() {
 	// init logger
 	initLogger(logpath, logfile)
 
+	hasher := Hash.Hash{LogInfoCh: infoCh, LogShutdownCh: shutdownCh}
+	fmt.Println(hasher.HashAndSalt([]byte("marigold")))
+
 	registrar := Registrar.Registrar{Registry: make(map[string]map[uint]Registrar.AppInfo), Logpath: logpath, Logfile: logfile, LogInfoCh: infoCh, LogShutdownCh: shutdownCh}
 	registrar.HelloRegistrar()
 
@@ -41,8 +46,8 @@ func main() {
 	// TODO: later start the server in service/deamon mode
 	proxyServerInfo := ProxyServer.ProxyServer{Host: host, Port: port, Version: version, Message: message, Registrar: registrar,
 		Logpath: logpath, Logfile: logfile, LogInfoCh: infoCh, LogShutdownCh: shutdownCh}
-	//proxyServerInfo.RunServer()
-	_ = proxyServerInfo
+	proxyServerInfo.RunServer()
+	//_ = proxyServerInfo
 }
 
 // parse command line args
